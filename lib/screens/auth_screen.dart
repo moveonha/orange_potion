@@ -1,19 +1,27 @@
-// lib/screens/auth_screen.dart
 import 'package:flutter/material.dart';
 import '../services/auth_helper.dart';
 import './home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
+  const AuthScreen({Key? key}) : super(key: key);
+
   @override
-  _AuthScreenState createState() => _AuthScreenState();
+  State<AuthScreen> createState() => AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLogin = true;
   bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -31,11 +39,13 @@ class _AuthScreenState extends State<AuthScreen> {
         email: email,
         password: password,
       );
+      print('로그인 시도: $email'); // 로그 추가
     } else {
       error = await AuthHelper().signUp(
         email: email,
         password: password,
       );
+      print('회원가입 시도: $email'); // 로그 추가
     }
 
     setState(() {
@@ -43,10 +53,13 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     if (error == null) {
+      print('인증 성공!'); // 로그 추가
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
+      print('인증 실패: $error'); // 로그 추가
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error)),
       );
