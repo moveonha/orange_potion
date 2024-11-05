@@ -27,11 +27,11 @@ class MyApp extends StatelessWidget {
           create: (_) => CartProvider(),
         ),
       ],
-      child: MaterialApp(
+      child: MaterialApp(    // const 제거
         title: 'Orange Potion',
-        theme: ThemeData(
+        theme: ThemeData(    // const 제거
           primarySwatch: Colors.orange,
-          colorScheme: const ColorScheme.light().copyWith(
+          colorScheme: const ColorScheme.light(
             primary: Colors.orange,
             secondary: Colors.orangeAccent,
           ),
@@ -39,13 +39,15 @@ class MyApp extends StatelessWidget {
           appBarTheme: const AppBarTheme(
             centerTitle: true,
             elevation: 0,
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
           ),
         ),
-        home: HomeScreen(),
+        home: const HomeScreen(),
         routes: {
-          '/product-list': (_) => ProductListScreen(),
-          '/product-detail': (_) => ProductDetailScreen(),
-          '/cart': (_) => CartScreen(),
+          '/product-list': (_) => const ProductListScreen(),
+          '/product-detail': (_) => const ProductDetailScreen(),
+          '/cart': (_) => const CartScreen(),
           '/profile': (_) => ProfileScreen(),
         },
       ),
