@@ -1,15 +1,18 @@
 // lib/screens/product_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/product.dart';
+import '../providers/products_provider.dart';
 import '../providers/cart_provider.dart';
 
 class ProductDetailScreen extends StatelessWidget {
-  const ProductDetailScreen({super.key});
+  const ProductDetailScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final product = ModalRoute.of(context)!.settings.arguments as Product;
+    final productId = ModalRoute.of(context)!.settings.arguments as String;  // ID를 문자열로 받음
+    final productsProvider = Provider.of<ProductsProvider>(context, listen: false);
+    final product = productsProvider.findById(productId);  // ID로 상품 찾기
+    final cart = Provider.of<CartProvider>(context, listen: false);
 
     return Scaffold(
       body: CustomScrollView(
@@ -23,6 +26,12 @@ class ProductDetailScreen extends StatelessWidget {
                 child: Image.network(
                   product.imageUrl,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.error),
+                    );
+                  },
                 ),
               ),
             ),
@@ -51,22 +60,7 @@ class ProductDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      '상품 설명',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      product.description,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 100), // 하단 버튼을 위한 여백
+                    Text(product.description),
                   ],
                 ),
               ),
@@ -74,65 +68,48 @@ class ProductDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomSheet: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.favorite_border),
-                label: const Text('찜하기'),
-                onPressed: () {
-                  // 찜하기 기능 구현
-                },
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: Icon(
+                    product.isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: Colors.red,
+                  ),
+                  label: const Text('찜하기'),
+                  onPressed: () {
+                    product.toggleFavorite();
+                  },
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: () {
-                  Provider.of<CartProvider>(context, listen: false)
-                      .addItem(
-                    product.id,
-                    product.title,
-                    product.price,
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('장바구니에 추가되었습니다'),
-                      duration: const Duration(seconds: 2),
-                      action: SnackBarAction(
-                        label: '실행 취소',
-                        onPressed: () {
-                          Provider.of<CartProvider>(context, listen: false)
-                              .removeItem(product.id);
-                        },
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: () {
+                    cart.addItem(product.id, product.title, product.price);
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('장바구니에 추가되었습니다'),
+                        duration: const Duration(seconds: 2),
+                        action: SnackBarAction(
+                          label: '실행 취소',
+                          onPressed: () {
+                            cart.removeSingleItem(product.id);
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                    );
+                  },
+                  child: const Text('장바구니 담기'),
                 ),
-                child: const Text('장바구니 담기'),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
